@@ -34,15 +34,28 @@ public class RequestManager {
 
     // Caso di parametro Order
     if (parameterObject instanceof Order) {
-      int esito = 0;
+
+      int esitoPrep = 0;
       Order parameterOrder = (Order)parameterObject;
       DatabaseManager dbManager = new DatabaseManager();
+
       try {
-        esito = dbManager.insertOrder(parameterOrder);
-        return esito;
+
+        // Faccio il controllo per vedere se ci sono abbastanza elementi in magazzino
+        esitoPrep = dbManager.removeFromWarehouse(parameterOrder.getOrderItemList());
+
+        // Se esitoPrep è positivo, inserisco l'ordine
+        if (esitoPrep == 1) {
+          int esitoOrdine = dbManager.insertOrder(parameterOrder);
+          return esitoOrdine;
+        } else {
+          return 0;
+        }
+
       } catch (SQLException e) {
         return 0;
       }
+
     }
 
     return 0;
@@ -99,6 +112,5 @@ public class RequestManager {
     }
 
   }
-
 
 }

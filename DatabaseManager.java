@@ -300,18 +300,114 @@ public class DatabaseManager {
       }
       
     } catch (SQLException e) {
+
       System.out.println("Errore in DatabaseManager:");
       System.out.println(e.getMessage());
       return 0;
+
     }
 
   }
 
 
-  // 6 - Questo metodo serve per rimuovere articoli dal magazzino, lo uso quando ho un ordine e devo rimuovere dal magazzino. Aggiorna automaticamente quando un responabile fa un ordine che va a buon fine.
+  // 6 - Questo metodo serve per rimuovere articoli dal magazzino, lo uso quando ho un ordine e devo rimuovere dal magazzino. Aggiorna automaticamente quando un responsabile fa un ordine che va a buon fine.
 
-  public int removeFromWarehouse() {
-    return 0;
+  // TODO: rimozione della ultima istanza, non riesco
+  
+  public int removeFromWarehouse(List<ItemListComponent> itemList) {
+    
+    try (Connection con = DriverManager.getConnection("jdbc:postgresql://localhost/Elio")) {
+      
+      try (PreparedStatement pst = con.prepareStatement("SELECT COUNT(*) FROM Warehouse WHERE itemType = ?")) {
+        
+        int counter = 0;
+        int esitoDel = 0;
+
+        // Ciclo su tutte le istanze della lista di oggetti dell'ordine
+        for (int i = 0; i < itemList.size(); i++) {
+
+          ItemListComponent temp = new ItemListComponent();
+          temp = itemList.get(i);
+          boolean check = true;
+
+          // Setto i parametri della query
+          pst.clearParameters();
+          pst.setString(1, temp.getItemType());
+
+          // Eseguo il comando
+          ResultSet rs = pst.executeQuery();
+
+          // Controllo che il numero di elementi nell'ordine siano minori o uguali di quelli presenti nel magazzino
+          while (rs.next()) {
+            if (rs.getInt(1) <= temp.getItemQuantity()) {
+              check = false;
+            }
+          }
+
+          // Controllo che alla condizione precedente sia andato tutto bene, il counter mi salva l'esito del confronto per ogni elemento della lista. Questo contatore alla fine, per essere corretto, dovrà essere uguale alla dimensione della lista di oggetti nell'ordine.
+          if (check) {
+            counter++;
+          }
+
+        }
+
+        // Se qui l'uguaglianza sussiste, rimuovo le istanze interessate
+        if (counter == itemList.size()) {
+
+          try (PreparedStatement pstTwo = con.prepareStatement("DELETE FROM Warehouse WHERE ctid IN ( SELECT ctid FROM Warehouse WHERE itemtype = ? LIMIT ? )")) {
+
+            for (int i = 0; i < itemList.size(); i++) {
+
+              ItemListComponent temp = new ItemListComponent();
+              temp = itemList.get(i);
+        
+              // Metto il parametro nella query
+              pstTwo.clearParameters();
+              pstTwo.setString(1, temp.getItemType());
+              pstTwo.setInt(2, temp.getItemQuantity());
+
+              // Eseguo il comando
+              esitoDel += pstTwo.executeUpdate();
+
+            }
+
+            // Se il numero di delezioni è uguale al numero di oggetti nell'ordine, allora è tutto apposto
+            if (esitoDel == itemList.size()) {
+              return 1;
+            } else {
+              return 0;
+            }
+            
+          } catch (SQLException e) {
+
+            System.out.println("Errore in DatabaseManager6:");
+            System.out.println(e.getMessage());
+            return 0;
+
+          }
+
+        } else {
+          return 0;
+        }
+
+      } catch (SQLException e) {
+
+        System.out.println("Errore in DatabaseManager6:");
+        System.out.println(e.getMessage());
+        return 0;
+
+      } finally {
+        con.close();
+      }
+
+    } catch (SQLException e) {
+      
+      System.out.println("Errore in DatabaseManager6:");
+      System.out.println(e.getMessage());
+      return 0;
+
+    }
+
   }
 
 
