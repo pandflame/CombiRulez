@@ -9,10 +9,7 @@ import java.util.ArrayList;
 
 public class DatabaseManager {
 
-  private int esito = 0;
-
   // Costruttore della classe
-
   public DatabaseManager() {
   }
 
@@ -98,7 +95,7 @@ public class DatabaseManager {
         pst.setString(4, parameterItem.getMaterial());
 
         // Svolgo l'inserimento
-        esito = pst.executeUpdate();
+        int esito = pst.executeUpdate();
 
         // Ritorno il numero di righe inserite, dovrebbe essere sempre 1
         return esito;
@@ -124,7 +121,7 @@ public class DatabaseManager {
 
   // 3 - Ritorna tutti gli itemType degli ordini, serve al responsabile del negozio.
 
-  public List<String> viewOrderHistory() {
+  public List<String[]> viewOrderHistory() {
 
     // Mi connetto al database
     try (Connection con = DriverManager.getConnection("jdbc:postgresql://localhost/Elio")) {
@@ -136,11 +133,17 @@ public class DatabaseManager {
         result = pst.executeQuery();
 
         // Inizializzo una lista di stringhe, mi serve per salvarmi i risultati
-        List<String> resultList = new ArrayList<String>();
+        List<String[]> resultList = new ArrayList<String[]>();
+        String[] resultArray = new String[2];
+
         int i = 0;
         while (result.next()) {
-          // 4 è la colonna degli itemType
-          resultList.add(i, result.getString(4));
+          for (int j = 3; j < 5; j++) {
+            // 4 è la colonna degli itemType
+            String temp = result.getString(j);
+            resultArray[j-3] = temp;
+          }
+          resultList.add(i, resultArray);
           i++;
         }
         
@@ -244,8 +247,37 @@ public class DatabaseManager {
 
   // 5 - Questo metodo serve per spostare un articolo da un settore ad un altro del magazzino.
 
-  public int changeWarehouseSector() {
-    return 0;
+  public int changeWarehouseSector(WarehouseItem wItem, int newSection) {
+
+    try (Connection con = DriverManager.getConnection("jdbc:postgresql://localhost/Elio")) {
+
+      try (PreparedStatement pst = con.prepareStatement("UPDATE warehouse SET itemwarehousesector = ? WHERE itemcode = ?")){
+        
+        // Aggiungo i parametri
+        pst.clearParameters();
+        pst.setInt(1, newSection);
+        pst.setString(2, wItem.getWarehouseItemCode());
+
+        // Eseguo il comando
+        int esito = pst.executeUpdate();
+        return esito;
+
+      } catch (SQLException e) {
+
+        System.out.println("Errore in DatabaseManager:");
+        System.out.println(e.getMessage());
+        return 0;
+
+      } finally {
+        con.close();
+      }
+      
+    } catch (SQLException e) {
+      System.out.println("Errore in DatabaseManager:");
+      System.out.println(e.getMessage());
+      return 0;
+    }
+
   }
 
 
@@ -260,6 +292,92 @@ public class DatabaseManager {
 
   public int insertIntoWarehouse() {
     return 0;
+  }
+
+
+  // 8 - Questo metodo serve per eseguire l'autenticazione, viene chiamato appena si apre l'applicazione. Ritorna una stringa che verrà processata in authentication Manager.
+
+  public User getCredentials(String userCode) throws SQLException {
+    
+    try (Connection con = DriverManager.getConnection("jdbc:postgresql://localhost/Elio")) {
+      
+      try (PreparedStatement pst = con.prepareStatement("SELECT * FROM UserList WHERE userCode = ?")) {
+        
+        // Preparo la query
+        pst.clearParameters();
+        pst.setString(1, userCode);
+
+        // Eseguo il comando
+        ResultSet rs = null;
+        rs = pst.executeQuery();
+
+        // Preparo il risultato
+        User userInfo = new User();
+
+        while(rs.next()) {
+          userInfo.setUserCode(rs.getString(1));
+          userInfo.setUserFirstName(rs.getString(2));
+          userInfo.setUserLastName(rs.getString(3));
+          userInfo.setUserPassword(rs.getString(4));
+          userInfo.setUserRole(rs.getInt(5));
+        }
+
+        return userInfo;
+
+      } catch (SQLException e) {
+        System.out.println("Errore:");
+        System.out.println(e.getMessage());
+        return null;
+      } finally {
+        con.close();
+      }
+
+    } catch (SQLException e) {
+      System.out.println("Errore:");
+      System.out.println(e.getMessage());
+      return null;
+    }
+
+  }
+
+
+  // 9 - Ritorna il numero dell'ordine che dovrò fare. Esegue una ricerca sul log degli ordini e ritorna l'ultimo utilizzato.
+
+  public int getLastOrderNumber() {
+    
+    try (Connection con = DriverManager.getConnection("jdbc:postgresql://localhost/Elio")) {
+
+      try (PreparedStatement pst = con.prepareStatement("SELECT orderCode FROM listaOrdini ORDER BY orderCode DESC LIMIT 1")) {
+        
+        // Eseguo il comando
+        ResultSet rs = pst.executeQuery();
+        int lastOrderCode = 0;
+   
+        // Salvo il risultato
+        while (rs.next()) {
+          lastOrderCode = rs.getInt(1);
+        }
+
+        return lastOrderCode;
+
+      } catch (Exception e) {
+
+        System.out.println("Errore:");
+        System.out.println(e.getMessage());
+        return 0;
+
+      } finally {
+        con.close();
+      }
+      
+    } catch (Exception e) {
+
+      System.out.println("Errore:");
+      System.out.println(e.getMessage());
+      return 0;
+      
+    }
+
   }
 
 }

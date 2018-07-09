@@ -2,7 +2,6 @@
 package Data.FilePackage;
 
 import java.io.IOException;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +14,8 @@ public class RequestManager {
   public RequestManager() {
   }
 
-  // Esempio di metodo che scrive l'istanza di un Object nel file di testo proprio
+  // Inserimento di una tupla nella propria tabella
+
   public int dbAction(Object parameterObject) throws IOException, SQLException {
 
     // Caso di parametro Item
@@ -50,12 +50,15 @@ public class RequestManager {
   }
 
 
-  public List<String> dbView(int user) throws SQLException {
+  // Questo metodo è da unire con il successivo
+
+  public List<String[]> dbView(int user) throws SQLException {
 
     // Se l'utente è di tipo 1, allora è un manager del negozio e la cronologia che può vedere è quella degl ordini eseguiti
     if (user == 1) {
-      List<String> result = new ArrayList<String>();
+      List<String[]> result = new ArrayList<String[]>();
       DatabaseManager dbManager = new DatabaseManager();
+
       try {
         result = dbManager.viewOrderHistory();
         return result;
@@ -64,20 +67,44 @@ public class RequestManager {
       }
     }
 
-    // Se l'utente è di tipo 2, allora fa parte della segreteria e la cronologia che può vedere è quella dei movimenti del magazzino
+    return null;
+  
+  }
+
+  // Se l'utente è di tipo 2, allora fa parte della segreteria e la cronologia che può vedere è quella dei movimenti del magazzino
+  public List<String> dbViewList(int user) throws SQLException {
+
     if (user == 2) {
       List<String> result = new ArrayList<String>();
       DatabaseManager dbManager = new DatabaseManager();
+
       try {
         result = dbManager.viewMovementHistory(2);
         return result;
       } catch (Exception e) {
         return null;
       }
+      
     }
 
     return null;
 
   }
   
+
+  // Quando il cambiamento del settore va a buon fine, ritorno 1 
+  public int changeItemSector(WarehouseItem wItem, int newSection) {
+
+    DatabaseManager dbManager = new DatabaseManager();
+
+    try {
+      int esito = dbManager.changeWarehouseSector(wItem, newSection);
+      return esito;
+    } catch (Exception e) {
+      return 0;
+    }
+
+  }
+
+
 }

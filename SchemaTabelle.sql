@@ -39,3 +39,18 @@ CREATE TABLE UscitaMagazzino (
   shipmentHandler VARCHAR NOT NULL,
   PRIMARY KEY(shipmentCode, shipmentItem)
 );
+
+CREATE TABLE UserList (
+  userCode CHAR(16) PRIMARY KEY,
+  userFirstName VARCHAR NOT NULL,
+  userLastName VARCHAR NOT NULL,
+  userPassword VARCHAR NOT NULL,
+  userRole INTEGER NOT NULL CHECK(userRole BETWEEN 1 AND 3)
+);
+
+CREATE TABLE Store (
+  storeCode CHAR(11) PRIMARY KEY CHECK(storeCode SIMILAR TO '[0-9]{11}'),
+  storeName VARCHAR NOT NULL,
+  storeAddress VARCHAR NOT NULL,
+  storeCity VARCHAR NOT NULL
+);
