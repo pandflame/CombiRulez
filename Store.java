@@ -1,5 +1,5 @@
 
-package ObjectPackage;
+package Data.ObjectPackage;
 
 
 public class Store {
@@ -12,6 +12,10 @@ public class Store {
   private String storeName;
   private String storeAddress;
 
+  // Costruttore vuoto
+  public Store() {
+    
+  }
 
   // Costruttore della classe
   public Store(String storeCode, String storeName, String storeAddress, String storeCity) {
@@ -40,5 +44,23 @@ public class Store {
     return storeCity;
   }
   
+
+  // Metosi Set
+
+  public void setStoreCode(String storeCode) {
+    this.storeCode = storeCode;
+  }
+
+  public void setStoreName(String storeName) {
+    this.storeName = storeName;
+  }
+
+  public void setStoreAddress(String storeAddress) {
+    this.storeAddress = storeAddress;
+  }
+
+  public void setStoreCity(String storeCity) {
+    this.storeCity = storeCity;
+  }
   
 }

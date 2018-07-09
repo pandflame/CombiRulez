@@ -1,5 +1,6 @@
 
-package ObjectPackage;
+package Data.ObjectPackage;
+
 
 
 public class ItemListComponent {
@@ -7,7 +8,7 @@ public class ItemListComponent {
 
   // Un oggetto di tipo ItemListComponent è formato dal tipo di articolo e dalla quantità di questo che è stato ordinato. Dunque devo avere un oggetto che sarà formato da una stringa, che rappresenti il tipo di Articolo (univoco), e da un intero che ne simboleggi la quantità.
 
-  private Item itemType;
+  private String itemType;
   private int itemQuantity;
 
 
@@ -21,7 +22,7 @@ public class ItemListComponent {
 
   // Costruttore della classe ItemListComponent
 
-  public ItemListComponent(Item itemType, int itemQuantity) {
+  public ItemListComponent(String itemType, int itemQuantity) {
     this.itemType = itemType;
     this.itemQuantity = itemQuantity;
   }
@@ -29,12 +30,23 @@ public class ItemListComponent {
 
   // Metodi Get
 
-  public void getItemType() {
-    itemType.getItemInformation();
+  public String getItemType() {
+    return this.itemType;
   }
 
   public int getItemQuantity() {
-    return itemQuantity;
+    return this.itemQuantity;
+  }
+
+
+  // Metodi Set
+
+  public void setItemType(String itemType) {
+    this.itemType = itemType;
+  }
+
+  public void setItemQuantity(int itemQuantity) {
+    this.itemQuantity = itemQuantity;
   }
 
 }

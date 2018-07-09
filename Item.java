@@ -1,5 +1,5 @@
 
-package ObjectPackage;
+package Data.ObjectPackage;
 
 
 public class Item {
@@ -13,10 +13,9 @@ public class Item {
   private String itemMaterial;
 
 
-  // Costruttore semplice
+  // Costruttore vuoto
 
-  public Item(String itemName) {
-    this.itemName = itemName;
+  public Item() {
   }
 
 
@@ -34,6 +33,45 @@ public class Item {
 
   public void getItemInformation() {
     System.out.println("\n"+itemName+"\n"+itemDescription+"\n"+itemSport+"\n"+itemMaterial+"\n");
+  }
+
+  public String getItemInformationString() {
+    return itemName+","+itemDescription+","+itemSport+","+itemMaterial+System.lineSeparator();
+  }
+  
+  public String getName() {
+    return this.itemName;
+  }
+
+  public String getDescription() {
+    return this.itemDescription;
+  }
+
+  public String getSport() {
+    return this.itemSport;
+  }
+
+  public String getMaterial() {
+    return this.itemMaterial;
+  }
+
+
+  // Metodi Set
+
+  public void setName(String itemName) {
+    this.itemName = itemName;
+  }
+
+  public void setDescription(String itemDescription) {
+    this.itemDescription = itemDescription;
+  }
+
+  public void setSport(String itemSport) {
+    this.itemSport = itemSport;
+  }
+
+  public void setMaterial(String itemMaterial) {
+    this.itemMaterial = itemMaterial;
   }
 
 }
