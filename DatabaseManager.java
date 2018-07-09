@@ -166,7 +166,7 @@ public class DatabaseManager {
 
   // 4 - Questo metodo serve per visualizzare tutti i movimenti del magazzino, lo utilizza la segreteria.
 
-  public List<String> viewMovementHistory(int choice) {
+  public List<String[]> viewMovementHistory(int choice) {
 
 
     try (Connection con = DriverManager.getConnection("jdbc:postgresql://localhost/Elio")) {
@@ -183,11 +183,25 @@ public class DatabaseManager {
           rs = pst.executeQuery();
 
           // Passo tutto in una lista di stringhe
-          List<String> resultList = new ArrayList<String>();
+          List<String[]> resultList = new ArrayList<String[]>();
+          
           int i = 0;
+
+          // Scorro le tuple risultato
           while (rs.next()) {
-            resultList.add(i, rs.getString(2));
+
+            String[] temp = new String[4];
+            // Scorro i valori delle singole tuple
+            Integer tInt = new Integer(rs.getInt(1));
+            // Di questo intero devo ricavarne la stringa
+            temp[0] = tInt.toString(); // shipmentCode
+            temp[1] = rs.getString(2); // shipmentItem
+            temp[2] = rs.getDate(3).toLocalDate().toString(); // shipmentDate
+            temp[3] = rs.getString(4); // shipmentHandler
+
+            resultList.add(i, temp);
             i++;
+
           }
 
           return resultList;
@@ -212,11 +226,24 @@ public class DatabaseManager {
           rs = pst.executeQuery();
 
           // Salvo tutto il ResultSet in una lista di stringhe
-          List<String> resultList = new ArrayList<String>();
+          List<String[]> resultList = new ArrayList<String[]>();
+          
           int i = 0;
           while (rs.next()) {
-            resultList.add(i, rs.getString(2));
+
+            String[] temp = new String[4];
+            // Scorro i valori delle singole tuple
+            Integer tInt = new Integer(rs.getInt(1));
+            // Di questo intero devo ricavarne la stringa
+            temp[0] = tInt.toString(); // restockCode
+            temp[1] = rs.getString(2); // restockItem
+            temp[2] = rs.getDate(4).toLocalDate().toString(); // restockDate
+            tInt = rs.getInt(3);
+            temp[3] = tInt.toString(); // restockItemSector
+
+            resultList.add(i, temp);
             i++;
+
           }
 
           return resultList;

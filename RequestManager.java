@@ -67,19 +67,13 @@ public class RequestManager {
       }
     }
 
-    return null;
-  
-  }
-
-  // Se l'utente è di tipo 2, allora fa parte della segreteria e la cronologia che può vedere è quella dei movimenti del magazzino
-  public List<String> dbViewList(int user) throws SQLException {
-
+    // Se l'utente è di tipo 2, allora fa parte della segreteria e la cronologia che può vedere è quella dei movimenti del magazzino
     if (user == 2) {
-      List<String> result = new ArrayList<String>();
+      List<String[]> result = new ArrayList<String[]>();
       DatabaseManager dbManager = new DatabaseManager();
 
       try {
-        result = dbManager.viewMovementHistory(2);
+        result = dbManager.viewMovementHistory(2); // Cambiare in qualche modo, cosicchè si riesca con un solo parametro a decidere quale voglio vedere, entrata o uscita
         return result;
       } catch (Exception e) {
         return null;
