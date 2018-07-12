@@ -13,7 +13,8 @@ public class DatabaseManager {
   public DatabaseManager() {
   }
 
-  // Metodi della classe DatabaseManager
+  
+  // Metodi della classe DatabaseManager 
 
 
   // 1 - Questo metodo inserisce nella tabella Order un oggetto, serve al responsabile del negozio per fare un log dei suoi ordini.
@@ -372,7 +373,12 @@ public class DatabaseManager {
             }
 
             // Se il numero di delezioni è uguale al numero di oggetti nell'ordine, allora è tutto apposto
-            if (esitoDel == itemList.size()) {
+            int orderedObjects = 0;
+            for (int i = 0; i < itemList.size(); i++) {
+              orderedObjects = orderedObjects + itemList.get(i).getItemQuantity();
+            }
+            
+            if (esitoDel == orderedObjects) {
               return 1;
             } else {
               return 0;
@@ -483,7 +489,7 @@ public class DatabaseManager {
 
         return lastOrderCode;
 
-      } catch (Exception e) {
+      } catch (SQLException e) {
 
         System.out.println("Errore:");
         System.out.println(e.getMessage());
@@ -493,12 +499,59 @@ public class DatabaseManager {
         con.close();
       }
       
-    } catch (Exception e) {
+    } catch (SQLException e) {
 
       System.out.println("Errore:");
       System.out.println(e.getMessage());
       return 0;
       
+    }
+
+  }
+
+
+  // 10 - Questo metodo serve per inserire il movimento in uscita corrispondente ad un ordine che è andato a buon fine.
+
+  public int insertWarehouseExit(Order madeOrder) {
+
+    try (Connection con = DriverManager.getConnection("jdbc:postgresql://localhost/Elio")) {
+      
+      try (PreparedStatement pst = con.prepareStatement("INSERT INTO uscitaMagazzino VALUES (?,?,?,DEFAULT,?)")) {
+
+        int counter = 0;
+        
+        for (int i = 0; i < madeOrder.getOrderItemList().size(); i++) {
+          
+          // Preparo l'inserimento
+          pst.clearParameters();
+          pst.setInt(1, madeOrder.getOrderCode());
+          pst.setString(2, madeOrder.getOrderItemList().get(i).getItemType());
+          pst.setInt(3, madeOrder.getOrderItemList().get(i).getItemQuantity());
+          pst.setString(4, "GLS");
+          
+          // Eseguo il comando
+          counter += pst.executeUpdate();
+        
+        }
+
+        if (counter == madeOrder.getOrderItemList().size()) {
+          return 1;
+        } else {
+          return 0;
+        }
+
+      } catch (SQLException e) {
+        System.out.println("Errore in insertWarehouseExit:");
+        System.out.println(e.getMessage());
+        return 0;
+      } finally {
+        con.close();
+      }
+
+    } catch (SQLException e) {
+      System.out.println("Errore in insertWarehouseExit:");
+      System.out.println(e.getMessage());
+      return 0;
     }
 
   }

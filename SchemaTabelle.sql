@@ -35,7 +35,8 @@ CREATE TABLE EntrataMagazzino (
 CREATE TABLE UscitaMagazzino (
   shipmentCode INTEGER CHECK( shipmentCode > 0 ),
   shipmentItem VARCHAR,
-  shipmentDate DATE NOT NULL DEFAULT(CURRENT_DATE),
+  shipmentItemQuantity INTEGER NOT NULL,
+  shipmentDate DATE NOT NULL DEFAULT(CURRENT_DATE+1),
   shipmentHandler VARCHAR NOT NULL,
   PRIMARY KEY(shipmentCode, shipmentItem)
 );

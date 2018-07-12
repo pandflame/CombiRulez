@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import Data.ObjectPackage.*;
+import jdk.nashorn.internal.ir.ReturnNode;
 
 
 public class RequestManager {
@@ -46,8 +47,16 @@ public class RequestManager {
 
         // Se esitoPrep è positivo, inserisco l'ordine
         if (esitoPrep == 1) {
+          
           int esitoOrdine = dbManager.insertOrder(parameterOrder);
-          return esitoOrdine;
+          int esitoInserimentoOrdine = dbManager.insertWarehouseExit(parameterOrder);
+
+            if ((esitoOrdine + esitoInserimentoOrdine) == 2) {
+              return 1;
+            } else {
+              return 0;
+            }
+
         } else {
           return 0;
         }
@@ -63,7 +72,7 @@ public class RequestManager {
   }
 
 
-  // Questo metodo è da unire con il successivo
+  // 1 = MANAGER, 2 = SEGRETERIA, 3 = MAGAZZINIERE
 
   public List<String[]> dbView(int user) throws SQLException {
 
