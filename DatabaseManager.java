@@ -430,6 +430,9 @@ public class DatabaseManager {
 
   public User getCredentials(String userCode) throws SQLException {
     
+    // Caricamento del driver
+    Class.forName("org.postgresql.Driver");
+    
     try (Connection con = DriverManager.getConnection("jdbc:postgresql://localhost/Elio")) {
       
       try (PreparedStatement pst = con.prepareStatement("SELECT * FROM UserList WHERE userCode = ?")) {
