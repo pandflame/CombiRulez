@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import Data.ObjectPackage.*;
+import jdk.nashorn.internal.ir.ReturnNode;
 
 
 public class RequestManager {
@@ -100,6 +101,19 @@ public class RequestManager {
         return null;
       }
       
+    }
+
+    // Se l'utente è di tipo 3, allora fa parte dello staff del magazzino e può vedere la lista di oggetti nel magazzino. Questo metodo serve principalmente per scegliere un oggetto nel database da spostare.
+    if (user == 3) {
+      List<String[]> result = new ArrayList<String[]>();
+      DatabaseManager dbManager = new DatabaseManager();
+
+      try {
+        result = dbManager.viewWarehouse();
+        return result;
+      } catch (Exception e) {
+        return null;
+      }
     }
 
     return null;

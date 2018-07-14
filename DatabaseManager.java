@@ -2,6 +2,8 @@
 package Data.FilePackage;
 
 import Data.ObjectPackage.*;
+
+import java.net.ConnectException;
 import java.sql.*;
 import java.util.List;
 import java.util.ArrayList;
@@ -552,6 +554,54 @@ public class DatabaseManager {
       System.out.println("Errore in insertWarehouseExit:");
       System.out.println(e.getMessage());
       return 0;
+    }
+
+  }
+
+
+  // 11 - Metodo che presenta tutti gli oggetti presenti nel magazzino.
+
+  public List<String[]> viewWarehouse() {
+    
+    try (Connection con = DriverManager.getConnection("jdbc:postgresql://localhost/Elio")) {
+      
+      try (PreparedStatement pst = con.prepareStatement("SELECT * FROM Warehouse")) {
+        
+        // Eseguo la query e inizializzo ciò che mi serve
+        ResultSet rs = null;
+        rs = pst.executeQuery();
+        List<String[]> resultList = new ArrayList<String[]>();
+        int i = 0;
+
+        while (rs.next()) {
+      
+          String[] temp = new String[5];
+          temp[0] = rs.getString(1);
+          temp[1] = rs.getString(2);
+          temp[2] = String.valueOf(rs.getDouble(3));
+          temp[3] = rs.getDate(4).toLocalDate().toString();
+          temp[4] = String.valueOf(rs.getInt(5));
+
+          // Aggiungo la tupla alla lista
+          resultList.add(i, temp);
+          i++;
+
+        }
+
+        return resultList;
+  
+      } catch (SQLException e) {
+        System.out.println("Errore in viewWarehouse:");
+        System.out.println(e.getMessage());
+        return null;
+      } finally {
+        con.close();
+      }
+
+    } catch (SQLException e) {
+      System.out.println("Errore in viewWarehouse:");
+      System.out.println(e.getMessage());
+      return null;
     }
 
   }
