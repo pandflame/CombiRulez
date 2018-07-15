@@ -839,6 +839,8 @@ public class DatabaseManager {
         System.out.println("Errore in viewOrderList:");
         System.out.println(e.getMessage());
         return null;
+      } finally {
+        con.close();
       }
 
     } catch (SQLException e) {
