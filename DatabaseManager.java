@@ -2,8 +2,6 @@
 package Data.FilePackage;
 
 import Data.ObjectPackage.*;
-
-import java.net.ConnectException;
 import java.sql.*;
 import java.util.List;
 import java.util.ArrayList;
@@ -15,6 +13,8 @@ public class DatabaseManager {
   public DatabaseManager() {
   }
 
+  private static final String databaseURL = new String("jdbc:postgresql://localhost/Elio");
+
   
   // Metodi della classe DatabaseManager 
 
@@ -24,10 +24,10 @@ public class DatabaseManager {
   public int insertOrder(Order parameterOrder) throws SQLException {
 
     // Mi connetto al database
-    try (Connection con = DriverManager.getConnection("jdbc:postgresql://localhost/Elio")) {
+    try (Connection con = DriverManager.getConnection(databaseURL)) {
 
       // Faccio l'inserimento
-      try (PreparedStatement pst = con.prepareStatement("INSERT INTO listaOrdini VALUES(?,?,?,?,?,?)")) {
+      try (PreparedStatement pst = con.prepareStatement("INSERT INTO listaOrdini VALUES(?,?,?,?,?,?, DEFAULT)")) {
 
         int orderLength = parameterOrder.getOrderItemList().size();
         Date orderDate = Date.valueOf(parameterOrder.getOrderDate());
@@ -85,7 +85,7 @@ public class DatabaseManager {
   public int insertItem(Item parameterItem) throws SQLException {
 
     // Mi connetto al database
-    try (Connection con = DriverManager.getConnection("jdbc:postgresql://localhost/Elio")) {
+    try (Connection con = DriverManager.getConnection(databaseURL)) {
       
       // Faccio l'inserimento
       try (PreparedStatement pst = con.prepareStatement("INSERT INTO Item VALUES(?, ?, ?, ?)")) {
@@ -127,9 +127,9 @@ public class DatabaseManager {
   public List<String[]> viewOrderHistory() {
 
     // Mi connetto al database
-    try (Connection con = DriverManager.getConnection("jdbc:postgresql://localhost/Elio")) {
+    try (Connection con = DriverManager.getConnection(databaseURL)) {
 
-      try (PreparedStatement pst = con.prepareStatement("SELECT * FROM listaOrdini")) {
+      try (PreparedStatement pst = con.prepareStatement("SELECT * FROM listaOrdini ORDER BY ordercode")) {
         
         // Inizializzo l'insieme dei risultati ed eseguo il comando
         ResultSet result = null;
@@ -172,14 +172,14 @@ public class DatabaseManager {
   public List<String[]> viewMovementHistory(int choice) {
 
 
-    try (Connection con = DriverManager.getConnection("jdbc:postgresql://localhost/Elio")) {
+    try (Connection con = DriverManager.getConnection(databaseURL)) {
 
 
       // Il parametro della scelta serve per capire se voglio vedere i movimenti di entrata o uscita dal magazzino. La scelta 1 sta per vedere quelli in uscita, mentre tutto il resto vale per i movimenti in entrata.
 
       if (choice == 1) {
       
-        try (PreparedStatement pst = con.prepareStatement("SELECT * FROM UscitaMagazzino")) {
+        try (PreparedStatement pst = con.prepareStatement("SELECT * FROM UscitaMagazzino ORDER BY shipmentcode")) {
           
           // Eseguo il comando e salvo i risultati
           ResultSet rs = null;
@@ -222,7 +222,7 @@ public class DatabaseManager {
 
       } else {
 
-        try (PreparedStatement pst = con.prepareStatement("SELECT * FROM EntrataMagazzino")) {
+        try (PreparedStatement pst = con.prepareStatement("SELECT * FROM EntrataMagazzino ORDER BY restockcode")) {
 
           // Eseguo il comando e salvo i risultati
           ResultSet rs = null;
@@ -279,7 +279,7 @@ public class DatabaseManager {
 
   public int changeWarehouseSector(WarehouseItem wItem, int newSection) {
 
-    try (Connection con = DriverManager.getConnection("jdbc:postgresql://localhost/Elio")) {
+    try (Connection con = DriverManager.getConnection(databaseURL)) {
 
       try (PreparedStatement pst = con.prepareStatement("UPDATE warehouse SET itemwarehousesector = ? WHERE itemcode = ?")){
         
@@ -314,17 +314,24 @@ public class DatabaseManager {
 
 
   // 6 - Questo metodo serve per rimuovere articoli dal magazzino, lo uso quando ho un ordine e devo rimuovere dal magazzino. Aggiorna automaticamente quando un responsabile fa un ordine che va a buon fine.
-
-  // TODO: rimozione della ultima istanza, non riesco
   
-  public int removeFromWarehouse(List<ItemListComponent> itemList) {
+  public int checkWarehouse(List<ItemListComponent> itemList) {
+
+    /*
+    try {
+      Class.forName("org.postgresql.Driver");
+    } catch (ClassNotFoundException e) {
+      System.out.println(e.getMessage());
+      return 0;
+    }
+    */
     
     try (Connection con = DriverManager.getConnection("jdbc:postgresql://localhost/Elio")) {
       
       try (PreparedStatement pst = con.prepareStatement("SELECT COUNT(*) FROM Warehouse WHERE itemType = ?")) {
         
         int counter = 0;
-        int esitoDel = 0;
+        // int esitoDel = 0;
 
         // Ciclo su tutte le istanze della lista di oggetti dell'ordine
         for (int i = 0; i < itemList.size(); i++) {
@@ -340,9 +347,9 @@ public class DatabaseManager {
           // Eseguo il comando
           ResultSet rs = pst.executeQuery();
 
-          // Controllo che il numero di elementi nell'ordine siano minori o uguali di quelli presenti nel magazzino
+          // Controllo che il numero di elementi nell'ordine siano minori o uguali di quelli presenti nel magazzino. Minore o minore uguale?
           while (rs.next()) {
-            if (rs.getInt(1) <= temp.getItemQuantity()) {
+            if (rs.getInt(1) < temp.getItemQuantity()) {
               check = false;
             }
           }
@@ -354,46 +361,8 @@ public class DatabaseManager {
 
         }
 
-        // Se qui l'uguaglianza sussiste, rimuovo le istanze interessate
         if (counter == itemList.size()) {
-
-          try (PreparedStatement pstTwo = con.prepareStatement("DELETE FROM Warehouse WHERE ctid IN ( SELECT ctid FROM Warehouse WHERE itemtype = ? LIMIT ? )")) {
-
-            for (int i = 0; i < itemList.size(); i++) {
-
-              ItemListComponent temp = new ItemListComponent();
-              temp = itemList.get(i);
-        
-              // Metto il parametro nella query
-              pstTwo.clearParameters();
-              pstTwo.setString(1, temp.getItemType());
-              pstTwo.setInt(2, temp.getItemQuantity());
-
-              // Eseguo il comando
-              esitoDel += pstTwo.executeUpdate();
-
-            }
-
-            // Se il numero di delezioni è uguale al numero di oggetti nell'ordine, allora è tutto apposto
-            int orderedObjects = 0;
-            for (int i = 0; i < itemList.size(); i++) {
-              orderedObjects = orderedObjects + itemList.get(i).getItemQuantity();
-            }
-            
-            if (esitoDel == orderedObjects) {
-              return 1;
-            } else {
-              return 0;
-            }
-            
-          } catch (SQLException e) {
-
-            System.out.println("Errore in DatabaseManager6:");
-            System.out.println(e.getMessage());
-            return 0;
-
-          }
-
+          return 1;
         } else {
           return 0;
         }
@@ -421,19 +390,62 @@ public class DatabaseManager {
 
   // 7 - Questo metodo serve per aggiungere articoli in magazzino, lo uso quando ho un ingresso in magazzino.
 
-  public int insertIntoWarehouse() {
-    return 0;
+  public int insertRestock(Restock restockItems) {
+    
+    try (Connection con = DriverManager.getConnection(databaseURL)) {
+
+      try (PreparedStatement pst = con.prepareStatement("INSERT INTO EntrataMagazzino VALUES (?,?,?,?)")) {
+
+        int counter = 0;
+
+        for (int i = 0; i < restockItems.getRestockItems().size(); i++) {
+          
+          // Setto i parametri
+          pst.clearParameters();
+          pst.setInt(1, restockItems.getRestockCode());
+          pst.setString(2, restockItems.getRestockItems().get(i).getItemName());
+          pst.setInt(3, restockItems.getRestockItems().get(i).getItemWarehouseSector());
+          pst.setDate(4, Date.valueOf(restockItems.getRestockDate()));
+
+          // Eseguo il comando
+          counter += pst.executeUpdate();
+        
+        }
+
+        if (counter == restockItems.getRestockItems().size()) {
+          return 1;
+        } else {
+          return 0;
+        }
+        
+      } catch (SQLException e) {
+        System.out.println("Errore in InsertIntoWarehouse:");
+        System.out.println(e.getMessage());
+        return 0;
+      } finally {
+        con.close();
+      }
+      
+    } catch (SQLException e) {
+      System.out.println("Errore in InsertIntoWarehouse:");
+      System.out.println(e.getMessage());
+      return 0;
+    }
+
   }
 
 
   // 8 - Questo metodo serve per eseguire l'autenticazione, viene chiamato appena si apre l'applicazione. Ritorna una stringa che verrà processata in authentication Manager.
 
   public User getCredentials(String userCode) throws SQLException {
+
+    try {
+      Class.forName("org.postgresql.Driver");
+    } catch(ClassNotFoundException e) {
+      System.out.println(e.getMessage());
+    }
     
-    // Caricamento del driver
-    Class.forName("org.postgresql.Driver");
-    
-    try (Connection con = DriverManager.getConnection("jdbc:postgresql://localhost/Elio")) {
+    try (Connection con = DriverManager.getConnection(databaseURL)) {
       
       try (PreparedStatement pst = con.prepareStatement("SELECT * FROM UserList WHERE userCode = ?")) {
         
@@ -479,7 +491,7 @@ public class DatabaseManager {
 
   public int getLastOrderNumber() {
     
-    try (Connection con = DriverManager.getConnection("jdbc:postgresql://localhost/Elio")) {
+    try (Connection con = DriverManager.getConnection(databaseURL)) {
 
       try (PreparedStatement pst = con.prepareStatement("SELECT orderCode FROM listaOrdini ORDER BY orderCode DESC LIMIT 1")) {
         
@@ -519,7 +531,7 @@ public class DatabaseManager {
 
   public int insertWarehouseExit(Order madeOrder) {
 
-    try (Connection con = DriverManager.getConnection("jdbc:postgresql://localhost/Elio")) {
+    try (Connection con = DriverManager.getConnection(databaseURL)) {
       
       try (PreparedStatement pst = con.prepareStatement("INSERT INTO uscitaMagazzino VALUES (?,?,?,DEFAULT,?)")) {
 
@@ -566,9 +578,9 @@ public class DatabaseManager {
 
   public List<String[]> viewWarehouse() {
     
-    try (Connection con = DriverManager.getConnection("jdbc:postgresql://localhost/Elio")) {
+    try (Connection con = DriverManager.getConnection(databaseURL)) {
       
-      try (PreparedStatement pst = con.prepareStatement("SELECT * FROM Warehouse")) {
+      try (PreparedStatement pst = con.prepareStatement("SELECT * FROM Warehouse ORDER BY itemcode")) {
         
         // Eseguo la query e inizializzo ciò che mi serve
         ResultSet rs = null;
@@ -603,6 +615,234 @@ public class DatabaseManager {
 
     } catch (SQLException e) {
       System.out.println("Errore in viewWarehouse:");
+      System.out.println(e.getMessage());
+      return null;
+    }
+
+  }
+
+
+  // 12 - Metodo che elimina le istanze dal magazzino, quando un ordine va a buon fine
+
+  public int removeFromWarehouse(List<ItemListComponent> itemList) {
+
+    try (Connection con = DriverManager.getConnection(databaseURL))  {
+      
+      try (PreparedStatement pst = con.prepareStatement("DELETE FROM Warehouse WHERE ctid IN ( SELECT ctid FROM Warehouse WHERE itemtype = ? LIMIT ? )")) {
+
+        int esitoDel = 0;
+
+        for (int i = 0; i < itemList.size(); i++) {
+
+          ItemListComponent temp = new ItemListComponent();
+          temp = itemList.get(i);
+    
+          // Metto il parametro nella query
+          pst.clearParameters();
+          pst.setString(1, temp.getItemType());
+          pst.setInt(2, temp.getItemQuantity());
+
+          // Eseguo il comando
+          esitoDel += pst.executeUpdate();
+
+        }
+
+        // Se il numero di delezioni è uguale al numero di oggetti nell'ordine, allora è tutto apposto
+        int orderedObjects = 0;
+        for (int i = 0; i < itemList.size(); i++) {
+          orderedObjects = orderedObjects + itemList.get(i).getItemQuantity();
+        }
+        
+        if (esitoDel == orderedObjects) {
+          return 1;
+        } else {
+          return 0;
+        }
+        
+      } catch (SQLException e) {
+
+        System.out.println("Errore in DatabaseManager6:");
+        System.out.println(e.getMessage());
+        return 0;
+
+      } finally {
+        con.close();
+      }
+
+    } catch (SQLException e) {
+      
+      System.out.println("Errore in DatabaseManager6:");
+      System.out.println(e.getMessage());
+      return 0;
+
+    }
+
+  }
+
+
+  // 13 - Metodo che ritorna una lista di ordini corrispondenti agli ordini che devono ancora essere evasi, quindi quelli ancora sospesi.
+
+  public List<String[]> viewOrderList() {
+
+    try (Connection con = DriverManager.getConnection(databaseURL)) {
+      
+      try (PreparedStatement pst = con.prepareStatement("SELECT * FROM listaordini WHERE orderstatus = 1")) {
+        
+        // Eseguo la query
+        ResultSet rs = pst.executeQuery();
+        List<String[]> orderList = new ArrayList<String[]>();
+        int i = 0;
+
+        while (rs.next()) {
+
+          // Scorro i risultati e costruisco la lista dei codici degli ordini da evadere
+          String[] temp = new String[7];
+          temp[0] = String.valueOf(rs.getInt(1));
+          temp[1] = rs.getDate(2).toLocalDate().toString();
+          temp[2] = rs.getString(3);
+          temp[3] = rs.getString(4);
+          temp[4] = String.valueOf(rs.getInt(5));
+          temp[5] = String.valueOf(rs.getDouble(6));
+          temp[6] = String.valueOf(rs.getInt(7));
+          orderList.add(i, temp);
+          i++;
+
+        }
+
+        return orderList;
+
+
+      } catch (SQLException e) {
+        System.out.println("Errore in viewOrderList:");
+        System.out.println(e.getMessage());
+        return null;
+      } finally {
+        con.close();
+      }
+
+    } catch (SQLException e) {
+      System.out.println("Errore in viewOrderList:");
+      System.out.println(e.getMessage());
+      return null;
+    }
+
+  }
+
+
+  // 14 - Metodo che cambia lo stato degli ordini da evadere.
+
+  public int changeOrderStatus(Order orderList) {
+
+    try (Connection con = DriverManager.getConnection(databaseURL)) {
+      
+      try (PreparedStatement pst = con.prepareStatement("UPDATE listaordini SET orderstatus = 2 WHERE ordercode = ?")) {
+
+        pst.clearParameters();
+        pst.setInt(1, orderList.getOrderCode());
+        int queryResult = pst.executeUpdate();
+
+        if (queryResult == orderList.getOrderItemList().size()) {
+          return 1;
+        } else {
+          return 0;
+        }
+        
+      } catch (SQLException e) {
+        System.out.println("Errore in viewOrderList:");
+        System.out.println(e.getMessage());
+        return 0;
+      } finally {
+        con.close();
+      }
+
+    } catch (SQLException e) {
+      System.out.println("Errore in viewOrderList:");
+      System.out.println(e.getMessage());
+      return 0;
+    }
+    
+  }
+
+
+  // 15 - Metodo che inserisce i nuovi elementi in magazzino
+
+  public int insertIntoWarehouse(List<RestockItem> restockItems) {
+
+    try (Connection con = DriverManager.getConnection(databaseURL)) {
+      
+      try (PreparedStatement pst = con.prepareStatement("INSERT INTO Warehouse VALUES (?,?,?,DEFAULT,?)")) {
+
+        // Prendo il codice dell'ultimo oggetto nel database
+        String index = this.getLastWarehouseNumber();
+        Integer temp = Integer.valueOf(index);
+        temp++;
+        int counter = 0;
+
+        for (int i = 0; i < restockItems.size(); i++) {
+          
+          // Setto i parametri
+          pst.clearParameters();
+          pst.setString(1, temp.toString());
+          pst.setString(2, restockItems.get(i).getItemName());
+          pst.setDouble(3, 12.60);
+          pst.setInt(4, restockItems.get(i).getItemWarehouseSector());
+
+          // Eseguo il comando
+          counter += pst.executeUpdate();
+          temp++;
+
+        }
+
+        if (counter == restockItems.size()) {
+          return 1;
+        } else {
+          return 0;
+        }
+        
+      } catch (SQLException e) {
+        System.out.println("Errore in insertIntoWarehouse:");
+        System.out.println(e.getMessage());
+        return 0;
+      } finally {
+        con.close();
+      }
+
+    } catch (SQLException e) {
+      System.out.println("Errore in insertIntoWarehouse:");
+      System.out.println(e.getMessage());
+      return 0;
+    }
+
+  }
+
+  // 16 - Ritorna il codice dell'ultimo elemento presente in magazzino. Esegue una ricerca sul log degli ordini e ritorna l'ultimo utilizzato.
+
+  public String getLastWarehouseNumber() {
+
+    try (Connection con = DriverManager.getConnection(databaseURL)) {
+      
+      try (PreparedStatement pst = con.prepareStatement("SELECT itemcode FROM Warehouse ORDER BY itemcode DESC LIMIT 1")) {
+        
+        // Eseguo la query
+        ResultSet rs = pst.executeQuery();
+        String result = new String();
+        result = null;
+
+        // Salvo il numero
+        while (rs.next()) {
+          result = rs.getString(1);
+        }
+
+        return result;
+
+      } catch (SQLException e) {
+        System.out.println("Errore in viewOrderList:");
+        System.out.println(e.getMessage());
+        return null;
+      }
+
+    } catch (SQLException e) {
+      System.out.println("Errore in getLastWarehouseNumber:");
       System.out.println(e.getMessage());
       return null;
     }

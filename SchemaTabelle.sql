@@ -21,6 +21,7 @@ CREATE TABLE ListaOrdini (
   orderItem VARCHAR NOT NULL,
   orderQuantity INTEGER NOT NULL CHECK( orderQuantity > 0 ),
   orderCost NUMERIC(6,2) NOT NULL CHECK ( orderCost > 0 ),
+  orderStatus INTEGER NOT NULL CHECK( orderStatus::VARCHAR SIMILAR TO '[1-2]') DEFAULT (1),
   PRIMARY KEY(orderCode, orderItem)
 );
 

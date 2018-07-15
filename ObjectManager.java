@@ -189,6 +189,7 @@ public class ObjectManager {
             resultOrder.setOrderDate(rs.getDate(2).toLocalDate());
             resultOrder.setOrderSource(rs.getString(3));
             resultOrder.setOrderCost(rs.getDouble(6));
+            resultOrder.setOrderStatus(rs.getInt(7));
           }
 
         }

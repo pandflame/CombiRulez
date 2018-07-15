@@ -6,7 +6,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import Data.ObjectPackage.*;
-import jdk.nashorn.internal.ir.ReturnNode;
 
 
 public class RequestManager {
@@ -15,18 +14,23 @@ public class RequestManager {
   public RequestManager() {
   }
 
-  // Inserimento di una tupla nella propria tabella
+
+  // 1 - Inserimento di una tupla nella propria tabella
 
   public int dbAction(Object parameterObject) throws IOException, SQLException {
 
     // Caso di parametro Item
     if (parameterObject instanceof Item) {
+
       int esito = 0;
       Item parameterItem = (Item)parameterObject;
       DatabaseManager dbManager = new DatabaseManager();
+
       try {
+
         esito = dbManager.insertItem(parameterItem);
         return esito;
+
       } catch(SQLException e) {
         return 0;
       }
@@ -42,16 +46,15 @@ public class RequestManager {
 
       try {
 
-        // Faccio il controllo per vedere se ci sono abbastanza elementi in magazzino
-        esitoPrep = dbManager.removeFromWarehouse(parameterOrder.getOrderItemList());
+        // Faccio il controllo per vedere se ci sono abbastanza elementi in magazzino, ma non faccio alcuna azione sulle tuple.
+        esitoPrep = dbManager.checkWarehouse(parameterOrder.getOrderItemList());
 
-        // Se esitoPrep è positivo, inserisco l'ordine
+        // Se esitoPrep è positivo, inserisco l'ordine nel database degli ordini, ma in stato di sospensione, ossia codice 1.
         if (esitoPrep == 1) {
           
           int esitoOrdine = dbManager.insertOrder(parameterOrder);
-          int esitoInserimentoOrdine = dbManager.insertWarehouseExit(parameterOrder);
 
-            if ((esitoOrdine + esitoInserimentoOrdine) == 2) {
+            if (esitoOrdine == 1) {
               return 1;
             } else {
               return 0;
@@ -67,14 +70,47 @@ public class RequestManager {
 
     }
 
+    if (parameterObject instanceof Restock) {
+      
+      int esitoInsert = 0;
+      int esitoWarehouse = 0;
+      Restock parameterRestock = (Restock)parameterObject;
+      DatabaseManager dbManager = new DatabaseManager();
+
+      try {
+        esitoInsert = dbManager.insertRestock(parameterRestock);
+      } catch (Exception e) {
+        return 0;
+      }
+
+      if (esitoInsert == 1) {
+
+        try {
+          esitoWarehouse = dbManager.insertIntoWarehouse(parameterRestock.getRestockItems());
+        } catch (Exception e) {
+          return 0;
+        }
+
+        if (esitoWarehouse == 1) {
+          return 1;
+        } else {
+          return 0;
+        }
+
+      } else {
+        return 0;
+      }
+
+    }
+
     return 0;
 
   }
 
 
-  // 1 = MANAGER, 2 = SEGRETERIA, 3 = MAGAZZINIERE
+  // 2 - Metodo che raccoglie tutte le azioni per ritornare una lista di tuple con user che è 1 = MANAGER, 2 = SEGRETERIA, 3 = MAGAZZINIERE. Choice, invece, serve per distinguere movimenti in entrata o movimenti in uscita, di default è 0, quindi non lo utilizzo, lo utilizzo in segreteria e in magazziniere.
 
-  public List<String[]> dbView(int user) throws SQLException {
+  public List<String[]> dbView(int user, int choice) throws SQLException {
 
     // Se l'utente è di tipo 1, allora è un manager del negozio e la cronologia che può vedere è quella degl ordini eseguiti
     if (user == 1) {
@@ -95,8 +131,10 @@ public class RequestManager {
       DatabaseManager dbManager = new DatabaseManager();
 
       try {
-        result = dbManager.viewMovementHistory(2); // Cambiare in qualche modo, cosicchè si riesca con un solo parametro a decidere quale voglio vedere, entrata o uscita
+
+        result = dbManager.viewMovementHistory(choice); // Cambiare in qualche modo, cosicchè si riesca con un solo parametro a decidere quale voglio vedere, entrata o uscita
         return result;
+
       } catch (Exception e) {
         return null;
       }
@@ -105,15 +143,35 @@ public class RequestManager {
 
     // Se l'utente è di tipo 3, allora fa parte dello staff del magazzino e può vedere la lista di oggetti nel magazzino. Questo metodo serve principalmente per scegliere un oggetto nel database da spostare.
     if (user == 3) {
-      List<String[]> result = new ArrayList<String[]>();
+      
       DatabaseManager dbManager = new DatabaseManager();
 
-      try {
-        result = dbManager.viewWarehouse();
-        return result;
-      } catch (Exception e) {
-        return null;
+      if (choice == 1) {
+
+        List<String[]> result = new ArrayList<String[]>();
+        try {
+          result = dbManager.viewWarehouse();
+          return result;
+        } catch (Exception e) {
+          return null;
+        }
+
+      } else if (choice == 2) {
+
+        try {
+
+          // Questo metodo fa vedere tutte gli ordini che non sono ancora stati eseguiti, quindi sospesi.
+          List<String[]> orderStringList = new ArrayList<String[]>(); // In caso da cambiare solo al codice id dell'ordine. Ho messo le tuple intere in modo da far vedere ai magazzinieri il tipo di ordine.
+          orderStringList = dbManager.viewOrderList();
+
+          return orderStringList;
+
+        } catch (Exception e) {
+          return null;
+        }
+
       }
+
     }
 
     return null;
@@ -121,7 +179,8 @@ public class RequestManager {
   }
   
 
-  // Quando il cambiamento del settore va a buon fine, ritorno 1 
+  // 3 - Quando il cambiamento del settore va a buon fine, ritorno 1 
+  
   public int changeItemSector(WarehouseItem wItem, int newSection) {
 
     DatabaseManager dbManager = new DatabaseManager();
@@ -132,6 +191,47 @@ public class RequestManager {
     } catch (Exception e) {
       return 0;
     }
+
+  }
+
+
+  // 4 - Metodo per evadere gli ordini non ancora fatti
+
+  public int completeOrder(List<String[]> orderStringList) {
+
+    // Prendo gli oggetti di tipo ordine a partire dalla loro chiave primaria.
+    Order makeOrder = new Order();
+    ObjectManager oManager = new ObjectManager();
+    DatabaseManager dbManager = new DatabaseManager();
+
+    // In questo punto devo prendere la lista di ordini ed evaderli. Ossia cambiare il loro stato da 1 a 2, rimuovere gli elementi dal magazzino e mettere tutto per iscritto nella tabella magazzino.
+
+    String[] temp = orderStringList.get(0);
+    makeOrder = oManager.getOrderInstance(Integer.valueOf(temp[0]));
+
+    // Togliere dal magazzino
+
+    int removeResult = dbManager.removeFromWarehouse(makeOrder.getOrderItemList());
+    int changeResult = 0;
+    int exitResult = 0;
+
+    if (removeResult == 1) {
+
+      // Cambiare lo stato dell'ordine
+      changeResult = dbManager.changeOrderStatus(makeOrder);
+
+      // Scrivere l'uscita dal magazzino
+      exitResult += dbManager.insertWarehouseExit(makeOrder);
+      
+      if (changeResult == 1 && exitResult == 1) {
+        return 1;
+      } else {
+        return 0;
+      }
+
+    }
+
+    return 0;
 
   }
 
