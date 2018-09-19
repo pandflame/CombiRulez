@@ -852,3 +852,39 @@ public class DatabaseManager {
   }
 
 }
+
+
+  // 17 -  Ritorna il codice dell'ultimo elemento presente in entrata. Esegue una ricerca sul log degli ordini e ritorna l'ultimo utilizzato.
+
+  public int getLastEntryNumber() {
+
+    try (Connection con = DriverManager.getConnection(databaseURL)) {
+
+      try (PreparedStatement pst = con.prepareStatement("SELECT restockcode FROM EntrataMagazzino ORDER BY restockcode DESC LIMIT 1")) {
+
+        // Eseguo la query
+        ResultSet rs = pst.executeQuery();
+        int result = 0;
+
+        // Salvo il numero
+        while (rs.next()) {
+          result = rs.getInt(1);
+        }
+
+        return result;
+
+      } catch (SQLException e) {
+        System.out.println("Errore in viewOrderList:");
+        System.out.println(e.getMessage());
+        return null;
+      } finally {
+      con.close();
+      }
+
+    } catch (SQLException e) {
+      System.out.println("Errore in getLastWarehouseNumber:");
+      System.out.println(e.getMessage());
+      return null;
+    }
+
+  }
