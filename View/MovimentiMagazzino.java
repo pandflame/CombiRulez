@@ -8,6 +8,7 @@ import Data.ObjectPackage.RestockItem;
 import Data.ObjectPackage.User;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -73,7 +74,8 @@ public class MovimentiMagazzino extends JFrame {
             }
         }
         // Aggiungo all'interfaccia la tabella dei movimenti in uscita dal magazzino
-        tableMovimentiUscita = new JTable(datiTableMovimenti, titoloTableMovimenti);
+        //tableMovimentiUscita = new JTable(datiTableMovimenti, titoloTableMovimenti);
+        tableMovimentiUscita.setModel(new NonEditableModel(datiTableMovimenti, titoloTableMovimenti));
         TablePanel.setViewportView(tableMovimentiUscita);
 
 
@@ -81,8 +83,9 @@ public class MovimentiMagazzino extends JFrame {
         tableMovimentiUscita.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                    int orderCode = (int) tableMovimentiUscita.getValueAt(tableMovimentiUscita.getSelectedRow(), 0);
-                    ordine.setOrderCode(orderCode);
+                Object orderCode = tableMovimentiUscita.getValueAt(tableMovimentiUscita.getSelectedRow(), 0);
+                String oCode = (String) orderCode;
+                ordine.setOrderCode(Integer.valueOf(oCode));
             }
         });
 
@@ -137,6 +140,18 @@ public class MovimentiMagazzino extends JFrame {
             }
         });
 
+    }
+
+
+    // Creo un nuovo modello di tabella per rendere le caselle non editabili
+    public class NonEditableModel extends DefaultTableModel {
+
+        public NonEditableModel(Object[][] data, Object[] columnNames){
+            super(data,columnNames);
+        }
+        public boolean isCellEditable(int row, int column) {
+            return false;
+        }
     }
 
 }

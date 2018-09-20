@@ -76,16 +76,17 @@ public class SpostamentiMagazzino extends JFrame {
 
         // Aggiungo all'interfaccia la tabella degli articoli in magazzino
         tableMagazzino = new JTable(datiTableMagazzino, titoloTableMagazzino);
-        TablePanel.setViewportView(tableMagazzino);
         //tableMagazzino.setModel(new NonEditableModel(datiTableMagazzino, titoloTableMagazzino));
+        TablePanel.setViewportView(tableMagazzino);
 
         // Seleziono l'articolo che mi interessa spostare con un listener sulla tabella che legge cosa seleziono col mouse
         tableMagazzino.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if(e.getClickCount()==1) {
-                    String itemCode = (String) tableMagazzino.getValueAt(tableMagazzino.getSelectedRow(), 0);
-                    articolo.setWarehouseItemCode(itemCode);
+                    Object itemCode = tableMagazzino.getValueAt(tableMagazzino.getSelectedRow(), 0);
+                    String iCode = (String) itemCode;
+                    articolo.setWarehouseItemCode(iCode);
                 }
             }
         });
@@ -111,6 +112,17 @@ public class SpostamentiMagazzino extends JFrame {
             }
         });
 
+    }
+
+    // Creo un nuovo modello di tabella per rendere le caselle non editabili
+    public class NonEditableModel extends DefaultTableModel {
+
+        public NonEditableModel(Object[][] data, Object[] columnNames){
+            super(data,columnNames);
+        }
+        public boolean isCellEditable(int row, int column) {
+            return false;
+        }
     }
 
 }

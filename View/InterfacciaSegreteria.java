@@ -5,6 +5,7 @@ import Data.ObjectPackage.Item;
 import Data.ObjectPackage.User;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -42,6 +43,8 @@ public class InterfacciaSegreteria extends JFrame {
         RequestManager order = new RequestManager();
         Item articolo = new Item();
 
+        //*********************************TABELLA ENTRATE***********************************************//
+
         // Creo un array di String[] che contiene gli elementi nel database degli ordini in entrata nel magazzino
         List<String[]> ordiniEntrata = new ArrayList<>();
         try {
@@ -62,9 +65,11 @@ public class InterfacciaSegreteria extends JFrame {
         }
 
         // Aggiungo all'interfaccia la tabella delle entrate in magazzino
-        tableEntrata = new JTable(datiTableEntrata, titoloTableEntrata);
+        //tableEntrata = new JTable(datiTableEntrata, titoloTableEntrata);
+        tableEntrata.setModel(new NonEditableModel(datiTableEntrata, titoloTableEntrata));
         entratePanel.setViewportView(tableEntrata);
 
+        //*********************************TABELLA USCITE***********************************************//
 
         // Creo un array di String[] che contiene gli elementi nel database degli ordini in uscita dal magazzino
         List<String[]> ordiniUscita = new ArrayList<>();
@@ -86,8 +91,11 @@ public class InterfacciaSegreteria extends JFrame {
         }
 
         // Aggiungo all'interfaccia la tabella delle uscite in magazzino
-        tableUscita = new JTable(datiTableUscita, titoloTableUscita);
+        //tableUscita = new JTable(datiTableUscita, titoloTableUscita);
+        tableUscita.setModel(new NonEditableModel(datiTableUscita, titoloTableUscita));
         uscitePanel.setViewportView(tableUscita);
+
+        //***********************************INSERIMENTO ARTICOLO*********************************************//
 
         // Confermo l'inserimento di un nuovo tipo articolo
         confermaButton.addActionListener(new ActionListener() {
@@ -109,6 +117,7 @@ public class InterfacciaSegreteria extends JFrame {
             }
         });
 
+
         esciButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent exitEvent) {
@@ -118,5 +127,17 @@ public class InterfacciaSegreteria extends JFrame {
         });
 
     }
+
+    // Creo un nuovo modello di tabella per rendere le caselle non editabili
+    public class NonEditableModel extends DefaultTableModel {
+
+        public NonEditableModel(Object[][] data, Object[] columnNames){
+            super(data,columnNames);
+        }
+        public boolean isCellEditable(int row, int column) {
+            return false;
+        }
+    }
+
 
 }
