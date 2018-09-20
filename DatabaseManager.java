@@ -402,7 +402,7 @@ public class DatabaseManager {
           
           // Setto i parametri
           pst.clearParameters();
-          pst.setInt(1, restockItems.getRestockCode());
+          pst.setInt(1, this.getLastEntryNumber()+1);
           pst.setString(2, restockItems.getRestockItems().get(i).getItemName());
           pst.setInt(3, restockItems.getRestockItems().get(i).getItemWarehouseSector());
           pst.setDate(4, Date.valueOf(restockItems.getRestockDate()));
@@ -533,7 +533,7 @@ public class DatabaseManager {
 
     try (Connection con = DriverManager.getConnection(databaseURL)) {
       
-      try (PreparedStatement pst = con.prepareStatement("INSERT INTO uscitaMagazzino VALUES (?,?,?,DEFAULT,?)")) {
+      try (PreparedStatement pst = con.prepareStatement("INSERT INTO uscitaMagazzino VALUES (?,?,?,DEFAULT,?,?)")) {
 
         int counter = 0;
         
@@ -545,6 +545,7 @@ public class DatabaseManager {
           pst.setString(2, madeOrder.getOrderItemList().get(i).getItemType());
           pst.setInt(3, madeOrder.getOrderItemList().get(i).getItemQuantity());
           pst.setString(4, "GLS");
+          pst.setString(5, madeOrder.getOrderSource());
           
           // Eseguo il comando
           counter += pst.executeUpdate();
@@ -774,8 +775,12 @@ public class DatabaseManager {
 
         // Prendo il codice dell'ultimo oggetto nel database
         String index = this.getLastWarehouseNumber();
-        Integer temp = Integer.valueOf(index);
-        temp++;
+        Integer temp = 0;
+        if (index == null) {
+          temp = 100;
+        } else {
+         temp = Integer.valueOf(index) + 1;
+        }
         int counter = 0;
 
         for (int i = 0; i < restockItems.size(); i++) {
@@ -851,8 +856,6 @@ public class DatabaseManager {
 
   }
 
-}
-
 
   // 17 -  Ritorna il codice dell'ultimo elemento presente in entrata. Esegue una ricerca sul log degli ordini e ritorna l'ultimo utilizzato.
 
@@ -876,7 +879,8 @@ public class DatabaseManager {
       } catch (SQLException e) {
         System.out.println("Errore in viewOrderList:");
         System.out.println(e.getMessage());
-        return null;
+        return 0;
+
       } finally {
       con.close();
       }
@@ -884,7 +888,9 @@ public class DatabaseManager {
     } catch (SQLException e) {
       System.out.println("Errore in getLastWarehouseNumber:");
       System.out.println(e.getMessage());
-      return null;
+      return 0;
     }
 
   }
+
+}

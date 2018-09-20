@@ -83,11 +83,14 @@ public class RequestManager {
         return 0;
       }
 
+
+
       if (esitoInsert == 1) {
 
         try {
           esitoWarehouse = dbManager.insertIntoWarehouse(parameterRestock.getRestockItems());
         } catch (Exception e) {
+          e.printStackTrace();
           return 0;
         }
 
