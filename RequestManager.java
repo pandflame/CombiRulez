@@ -15,7 +15,7 @@ public class RequestManager {
   }
 
 
-  // 1 - Inserimento di una tupla nella propria tabella
+  // Inserimento di una tupla nella propria tabella
 
   public int dbAction(Object parameterObject) throws IOException, SQLException {
 
@@ -71,7 +71,7 @@ public class RequestManager {
     }
 
     if (parameterObject instanceof Restock) {
-      
+
       int esitoInsert = 0;
       int esitoWarehouse = 0;
       Restock parameterRestock = (Restock)parameterObject;
@@ -108,7 +108,8 @@ public class RequestManager {
   }
 
 
-  // 2 - Metodo che raccoglie tutte le azioni per ritornare una lista di tuple con user che è 1 = MANAGER, 2 = SEGRETERIA, 3 = MAGAZZINIERE. Choice, invece, serve per distinguere movimenti in entrata o movimenti in uscita, di default è 0, quindi non lo utilizzo, lo utilizzo in segreteria e in magazziniere.
+  // 1 = MANAGER, 2 = SEGRETERIA, 3 = MAGAZZINIERE
+  // Choice, invece, serve per distinguere movimenti in entrata o movimenti in uscita, di default è 0, quindi non lo utilizzo, lo utilizzo in segreteria e in magazziniere.
 
   public List<String[]> dbView(int user, int choice) throws SQLException {
 
@@ -141,7 +142,8 @@ public class RequestManager {
       
     }
 
-    // Se l'utente è di tipo 3, allora fa parte dello staff del magazzino e può vedere la lista di oggetti nel magazzino. Questo metodo serve principalmente per scegliere un oggetto nel database da spostare.
+    // Se l'utente è di tipo 3, allora fa parte dello staff del magazzino e può vedere la lista di oggetti nel magazzino.
+      // Questo metodo serve principalmente per scegliere un oggetto nel database da spostare.
     if (user == 3) {
       
       DatabaseManager dbManager = new DatabaseManager();
@@ -179,7 +181,7 @@ public class RequestManager {
   }
   
 
-  // 3 - Quando il cambiamento del settore va a buon fine, ritorno 1 
+  // Quando il cambiamento del settore va a buon fine, ritorno 1 
   
   public int changeItemSector(WarehouseItem wItem, int newSection) {
 
@@ -195,9 +197,9 @@ public class RequestManager {
   }
 
 
-  // 4 - Metodo per evadere gli ordini non ancora fatti
+  // Metodo per evadere gli ordini non ancora fatti
 
-  public int completeOrder(List<String[]> orderStringList) {
+  public int completeOrder(Order evadOrder) {
 
     // Prendo gli oggetti di tipo ordine a partire dalla loro chiave primaria.
     Order makeOrder = new Order();
@@ -206,29 +208,27 @@ public class RequestManager {
 
     // In questo punto devo prendere la lista di ordini ed evaderli. Ossia cambiare il loro stato da 1 a 2, rimuovere gli elementi dal magazzino e mettere tutto per iscritto nella tabella magazzino.
 
-    String[] temp = orderStringList.get(0);
-    makeOrder = oManager.getOrderInstance(Integer.valueOf(temp[0]));
+    int code = evadOrder.getOrderCode();
+    makeOrder = oManager.getOrderInstance(code);
 
     // Togliere dal magazzino
-
     int removeResult = dbManager.removeFromWarehouse(makeOrder.getOrderItemList());
     int changeResult = 0;
     int exitResult = 0;
 
     if (removeResult == 1) {
 
-      // Cambiare lo stato dell'ordine
+      // Cambiare lo stato della riga
       changeResult = dbManager.changeOrderStatus(makeOrder);
 
       // Scrivere l'uscita dal magazzino
       exitResult += dbManager.insertWarehouseExit(makeOrder);
-      
+
       if (changeResult == 1 && exitResult == 1) {
         return 1;
       } else {
         return 0;
       }
-
     }
 
     return 0;

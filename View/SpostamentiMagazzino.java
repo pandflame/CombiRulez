@@ -113,12 +113,5 @@ public class SpostamentiMagazzino extends JFrame {
 
     }
 
-    /**
-     * Classe modello per la JTable, usata per impedire la modifica delle celle
-     * @author elia
-     *
-     */
-
-
 }
 
