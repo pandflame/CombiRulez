@@ -198,9 +198,12 @@ public class DatabaseManager {
             Integer tInt = new Integer(rs.getInt(1));
             // Di questo intero devo ricavarne la stringa
             temp[0] = tInt.toString(); // shipmentCode
-            temp[1] = rs.getString(2); // shipmentItem
-            temp[2] = rs.getDate(3).toLocalDate().toString(); // shipmentDate
-            temp[3] = rs.getString(4); // shipmentHandler
+            //temp[1] = rs.getString(2); // shipmentItem
+            //tInt = rs.getInt(3);
+            temp[2] = tInt.toString(); // shipmentQuantity
+            temp[2] = rs.getDate(4).toLocalDate().toString(); // shipmentDate
+            temp[3] = rs.getString(5); // shipmentHandler
+            temp[4] = rs.getString(6);
 
             resultList.add(i, temp);
             i++;
@@ -212,8 +215,9 @@ public class DatabaseManager {
 
         } catch (SQLException e) {
 
-          System.out.println("Errore in DatabaseManager:");
+          System.out.println("Errore in Segreteria:");
           System.out.println(e.getMessage());
+          e.printStackTrace();
           return null;
 
         } finally {
