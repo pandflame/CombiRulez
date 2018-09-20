@@ -137,17 +137,31 @@ public class DatabaseManager {
 
         // Inizializzo una lista di stringhe, mi serve per salvarmi i risultati
         List<String[]> resultList = new ArrayList<String[]>();
-        String[] resultArray = new String[2];
+        String[] resultArray = new String[6];
 
         int i = 0;
         while (result.next()) {
+          /*
           for (int j = 3; j < 5; j++) {
             // 4 è la colonna degli itemType
             String temp = result.getString(j);
             resultArray[j-3] = temp;
+
           }
+          */
+          Integer tInt = new Integer(result.getInt(1));
+          resultArray[0] = tInt.toString();
+          resultArray[1] = result.getDate(2).toLocalDate().toString();
+          resultArray[2] = result.getString(3);
+          resultArray[3] = result.getString(4);
+          tInt = result.getInt(5);
+          resultArray[4] = tInt.toString();
+          Double tDouble = result.getDouble(6);
+          resultArray[5] = tDouble.toString();
+
           resultList.add(i, resultArray);
           i++;
+
         }
         
         return resultList;
@@ -193,17 +207,17 @@ public class DatabaseManager {
           // Scorro le tuple risultato
           while (rs.next()) {
 
-            String[] temp = new String[4];
+            String[] temp = new String[6];
             // Scorro i valori delle singole tuple
             Integer tInt = new Integer(rs.getInt(1));
             // Di questo intero devo ricavarne la stringa
             temp[0] = tInt.toString(); // shipmentCode
-            //temp[1] = rs.getString(2); // shipmentItem
-            //tInt = rs.getInt(3);
+            temp[1] = rs.getString(2); // shipmentItem
+            tInt = rs.getInt(3);
             temp[2] = tInt.toString(); // shipmentQuantity
-            temp[2] = rs.getDate(4).toLocalDate().toString(); // shipmentDate
-            temp[3] = rs.getString(5); // shipmentHandler
-            temp[4] = rs.getString(6);
+            temp[3] = rs.getDate(4).toLocalDate().toString(); // shipmentDate
+            temp[4] = rs.getString(5); // shipmentHandler
+            temp[5] = rs.getString(6);
 
             resultList.add(i, temp);
             i++;
@@ -897,4 +911,10 @@ public class DatabaseManager {
 
   }
 
+
+
+  // 18 - Ritorna il codice dell'ultima uscita dal magazzino.
+
+
 }
+
