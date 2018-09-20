@@ -39,6 +39,7 @@ CREATE TABLE UscitaMagazzino (
   shipmentItemQuantity INTEGER NOT NULL,
   shipmentDate DATE NOT NULL DEFAULT(CURRENT_DATE+1),
   shipmentHandler VARCHAR NOT NULL,
+  shipmentDestination VARCHAR NOT NULL,
   PRIMARY KEY(shipmentCode, shipmentItem)
 );
 
