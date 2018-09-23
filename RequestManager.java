@@ -238,4 +238,24 @@ public class RequestManager {
 
   }
 
+
+  // Metodo per verificare l'inserimento corretto dei vari campi e ritorna 0 se c'è un errore di inserimento
+  // Es. le quantità devono essere solo interi, i nomi articolo in magazzino solo stringhe (senza numeri) ecc
+
+  public int controlInsertion (String stringaIngresso) {
+    // esito è sempre 1 (vero), se però c'è un errore derivante dai controlli diventa 0
+    int esito = 1;
+
+      for (int i = 0; i < (stringaIngresso).length(); i++ ){
+        char lettera = (stringaIngresso).charAt(i);
+        if (Character.isDigit(lettera)) {
+          esito = 0; // All'interno della stringa c'è un numero, segnalare errore
+        }
+      }
+
+      if (stringaIngresso.length() == 0) { esito = 0; }
+
+    return esito;
+  }
+
 }
