@@ -117,7 +117,7 @@ public class InterfacciaSegreteria extends JFrame {
                     articolo.setDescription(textDescrizione.getText());
                     articolo.setMaterial(textMateriale.getText());
                     articolo.setSport(textSport.getText());
-                    
+
                     try {
                         esito = order.dbAction(articolo);
                     } catch (IOException | SQLException e) {

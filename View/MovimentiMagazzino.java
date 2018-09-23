@@ -139,14 +139,22 @@ public class MovimentiMagazzino extends JFrame {
                 restockOrder.setRestockDate(LocalDate.now());
                 restockOrder.setRestockItems(restockItems);
 
-                try { esito = movimentiUscita.dbAction(restockOrder); } catch (IOException |SQLException e) {e.printStackTrace();}
-
-                if (esito == 1) {
-                    JOptionPane.showMessageDialog(null, "Inserimento avvenuto con successo.");
-                    restockItems.clear();
+                if (restockItems.size() == 0) {
+                    JOptionPane.showMessageDialog(null, "Inserire un articolo in entrata");
                 } else {
-                    JOptionPane.showMessageDialog(null, "Errore nell'inserimento.");
-                    restockItems.clear();
+                    try {
+                        esito = movimentiUscita.dbAction(restockOrder);
+                    } catch (IOException | SQLException e) {
+                        e.printStackTrace();
+                    }
+
+                    if (esito == 1) {
+                        JOptionPane.showMessageDialog(null, "Inserimento avvenuto con successo.");
+                        restockItems.clear();
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Errore nell'inserimento.");
+                        restockItems.clear();
+                    }
                 }
             }
         });
