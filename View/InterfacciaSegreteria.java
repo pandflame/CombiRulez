@@ -102,10 +102,6 @@ public class InterfacciaSegreteria extends JFrame {
             @Override
             public void actionPerformed(ActionEvent addConfirmEvent) {
                 Integer esito = 0;
-                articolo.setName(textNome.getText());
-                articolo.setDescription(textDescrizione.getText());
-                articolo.setMaterial(textMateriale.getText());
-                articolo.setSport(textSport.getText());
 
                 if (order.controlInsertion(textNome.getText()) == 0 ||
                         order.controlInsertion(textDescrizione.getText()) == 0 ||
@@ -117,6 +113,11 @@ public class InterfacciaSegreteria extends JFrame {
                     textMateriale.setText("");
                     textSport.setText("");
                 } else {
+                    articolo.setName(textNome.getText());
+                    articolo.setDescription(textDescrizione.getText());
+                    articolo.setMaterial(textMateriale.getText());
+                    articolo.setSport(textSport.getText());
+                    
                     try {
                         esito = order.dbAction(articolo);
                     } catch (IOException | SQLException e) {
