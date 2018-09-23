@@ -51,12 +51,27 @@ public class InterfacciaResponsabile extends JFrame {
         Order ordine = new Order();
         List<ItemListComponent> orderItems = new ArrayList<ItemListComponent>();
 
+
         // Aggiunta articolo a un ordine premendo il bottone di aggiunta
         addButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-               ItemListComponent articolo_ordine = new ItemListComponent(textArticolo.getText(), Integer.valueOf(textQuantità.getText()));
-               orderItems.add(articolo_ordine);
+
+                if ( order.controlInsertion(textArticolo.getText()) == 0 ) {
+                    JOptionPane.showMessageDialog(null, "Errore nell'inserimento - campi non supportati");
+                    textArticolo.setText("");
+                    textQuantità.setText("");
+                }
+                else if (order.controlInsertion(textQuantità.getText()) == 1 ) {
+                    JOptionPane.showMessageDialog(null, "Errore nell'inserimento - campi non supportati");
+                    textArticolo.setText("");
+                    textQuantità.setText("");
+                }
+                else {
+                    ItemListComponent articolo_ordine = new ItemListComponent(textArticolo.getText(), Integer.parseInt(textQuantità.getText()));
+                    orderItems.add(articolo_ordine);
+                    JOptionPane.showMessageDialog(null, "Aggiunto un articolo all'ordine");
+                }
             }
         });
 
@@ -65,7 +80,7 @@ public class InterfacciaResponsabile extends JFrame {
             @Override
             public void actionPerformed(ActionEvent addOrderEvent) {
                 Integer esito = 0;
-                ordine.setOrderCode(dbMan.getLastEntryNumber()+1);
+                ordine.setOrderCode(dbMan.getLastOrderNumber()+1);
                 ordine.setOrderItemList(orderItems);
                 ordine.setOrderDate(LocalDate.now());
                 ordine.setOrderSource("Decathlon");
@@ -75,15 +90,16 @@ public class InterfacciaResponsabile extends JFrame {
 
                     if (esito == 1) {
                         JOptionPane.showMessageDialog(null, "Ordine effettuato con successo.");
+                        orderItems.clear();
                     } else {
                         JOptionPane.showMessageDialog(null, "Errore nell'inserimento.");
-
+                        orderItems.clear();
                     }
 
                 }
         });
 
-        /*
+
         // Creo un array di String[] che contiene gli elementi nel database
         List<String[]> ordini = new ArrayList<>();
         try {
@@ -106,7 +122,6 @@ public class InterfacciaResponsabile extends JFrame {
         // Aggiungo all'interfaccia la tabella degli articoli in magazzino
         tableCrono.setModel(new NonEditableModel(datiTableOrdini, titoloTableOrdini));
         cronPanel.setViewportView(tableCrono);
-        */
 
 
         esciButton.addActionListener(new ActionListener() {

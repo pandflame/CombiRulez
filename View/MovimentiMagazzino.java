@@ -55,6 +55,8 @@ public class MovimentiMagazzino extends JFrame {
         Restock restockOrder = new Restock();
         List<RestockItem> restockItems = new ArrayList<RestockItem>();
 
+        //*********************************TABELLA USCITE***********************************************//
+
         // Creo un array di String[] che contiene gli elementi nel database
         List<String[]> movimenti = new ArrayList<>();
         try {
@@ -102,13 +104,29 @@ public class MovimentiMagazzino extends JFrame {
             }
         });
 
+        //*********************************ENTRATA MAGAZZINO***********************************************//
 
         // Aggiunta articolo a un ordine in entrata premendo il bottone di aggiunta
         addButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                RestockItem restockItem = new RestockItem(txtArticolo.getText(), Integer.valueOf(txtSettore.getText()));
-                restockItems.add(restockItem);
+
+                if ( movimentiUscita.controlInsertion(txtArticolo.getText()) == 0 ) {
+                    JOptionPane.showMessageDialog(null, "Errore nell'inserimento - campi non supportati");
+                    txtArticolo.setText("");
+                    txtSettore.setText("");
+                }
+                else if (movimentiUscita.controlInsertion(txtSettore.getText()) == 1 ) {
+                    JOptionPane.showMessageDialog(null, "Errore nell'inserimento - campi non supportati");
+                    txtArticolo.setText("");
+                    txtSettore.setText("");
+                }
+                else {
+                    RestockItem restockItem = new RestockItem(txtArticolo.getText(), Integer.valueOf(txtSettore.getText()));
+                    restockItems.add(restockItem);
+                    JOptionPane.showMessageDialog(null, "Aggiunto un articolo all'ordine in entrata");
+                }
+
             }
         });
 
@@ -125,8 +143,10 @@ public class MovimentiMagazzino extends JFrame {
 
                 if (esito == 1) {
                     JOptionPane.showMessageDialog(null, "Inserimento avvenuto con successo.");
+                    restockItems.clear();
                 } else {
                     JOptionPane.showMessageDialog(null, "Errore nell'inserimento.");
+                    restockItems.clear();
                 }
             }
         });

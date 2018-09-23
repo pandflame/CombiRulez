@@ -80,12 +80,12 @@ public class InterfacciaSegreteria extends JFrame {
         }
 
         // Creo la tabella con gli ordini in uscita dal magazzino
-        String[] titoloTableUscita = {"Codice", "Articolo", "Data", "Corriere"};
-        String[][] datiTableUscita = new String[ordiniUscita.size()][4];
+        String[] titoloTableUscita = {"Codice", "Articolo", "Quantità", "Data", "Corriere", "Negozio"};
+        String[][] datiTableUscita = new String[ordiniUscita.size()][6];
 
         for (int i = 0; i < ordiniUscita.size(); i++) {
             String[] item = ordiniUscita.get(i);
-            for (int j = 0; j < 4; j++) {
+            for (int j = 0; j < 6; j++) {
                 datiTableUscita[i][j] = item[j];
             }
         }
@@ -107,12 +107,35 @@ public class InterfacciaSegreteria extends JFrame {
                 articolo.setMaterial(textMateriale.getText());
                 articolo.setSport(textSport.getText());
 
-                try { esito = order.dbAction(articolo); } catch (IOException |SQLException e) { e.printStackTrace(); }
-
-                if (esito == 1) {
-                    JOptionPane.showMessageDialog(null, "Hai aggiunto un nuvo tipo di articolo");
+                if (order.controlInsertion(textNome.getText()) == 0 ||
+                        order.controlInsertion(textDescrizione.getText()) == 0 ||
+                        order.controlInsertion(textMateriale.getText()) == 0 ||
+                        order.controlInsertion(textSport.getText()) == 0) {
+                    JOptionPane.showMessageDialog(null, "Errore nell'inserimento - campi non supportati");
+                    textNome.setText("");
+                    textDescrizione.setText("");
+                    textMateriale.setText("");
+                    textSport.setText("");
                 } else {
-                    JOptionPane.showMessageDialog(null, "Errore");
+                    try {
+                        esito = order.dbAction(articolo);
+                    } catch (IOException | SQLException e) {
+                        e.printStackTrace();
+                    }
+
+                    if (esito == 1) {
+                        JOptionPane.showMessageDialog(null, "Hai aggiunto un nuvo tipo di articolo");
+                        textNome.setText("");
+                        textDescrizione.setText("");
+                        textMateriale.setText("");
+                        textSport.setText("");
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Errore");
+                        textNome.setText("");
+                        textDescrizione.setText("");
+                        textMateriale.setText("");
+                        textSport.setText("");
+                    }
                 }
             }
         });
